@@ -529,13 +529,28 @@ const App = () => {
                 },
                 error_callback: (error) => {
                      console.error("Google Sign-In Error:", error);
+
+                     const errorType = typeof error === 'string'
+                         ? error
+                         : error?.type || error?.error || '';
+                     const errorMessageText = (typeof error === 'string'
+                         ? error
+                         : error?.message || '')
+                         .toLowerCase();
+
                      // This is a common user action, not a technical failure.
-                     if (error?.type === 'popup_closed_by_user' || error?.message?.includes('closed')) {
-                         // User intentionally closed the sign-in popup.
-                         // We won't show an error message for this action.
+                     if (
+                         errorType === 'popup_closed_by_user' ||
+                         errorType === 'popup_closed' ||
+                         errorMessageText.includes('popup window closed') ||
+                         errorMessageText.includes('popup closed') ||
+                         errorMessageText.includes('window closed')
+                     ) {
+                         // Clear any previous troubleshooting message and keep the UI ready for another attempt.
+                         setError(null);
                          return;
                      }
-                     
+
                      // For other errors, provide detailed troubleshooting.
                      const errorMessage = html`<${TroubleshootingError} error=${error} />`;
                      setError(errorMessage);
